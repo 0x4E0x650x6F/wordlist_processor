@@ -35,7 +35,7 @@ class Wordlist(object):
                                         self.ERROR_FILENAME_SUFIX,
                                         self.filename])
         else:
-            raise ValueError("Invalid wordlist")
+            raise ValueError("Invalid wordlist file or path")
 
     def get_filename(self):
         """

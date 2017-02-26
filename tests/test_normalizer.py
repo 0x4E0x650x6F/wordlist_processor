@@ -33,12 +33,12 @@ class TestEncoding(unittest.TestCase):
         encoder = Encoder('utf_8_sig', 'utf8')
 
         for i in range(len(self.WORDS)):
-            self.assertEqual(encoder.convert(self.WORDS[i]), self.EXPECTED[i])
+            self.assertEqual(encoder.execute(self.WORDS[i]), self.EXPECTED[i])
     
     def test_convert_from_utf16_to_utf8_faild(self):
         with self.assertRaises(UnicodeDecodeError):
             encoder = Encoder('utf_16', 'utf8')
-            self.assertEqual(encoder.convert(self.WORDS[0]),
+            self.assertEqual(encoder.execute(self.WORDS[0]),
                              self.EXPECTED[0])
 
 
@@ -50,7 +50,7 @@ class TestNormalizer(unittest.TestCase):
         NUMBER_OF_SPACES  = 3
         
         normalizer = Sanitize()
-        strclean = normalizer.clean(INPUT)
+        strclean = normalizer.execute(INPUT)
         
         self.assertEqual(NUMBER_OF_SPACES, normalizer.get_count())
         self.assertEqual(EXPECTED, strclean)
@@ -63,7 +63,7 @@ class TestNormalizer(unittest.TestCase):
         NUMBER_OF_SPACES  = 1
         
         normalizer = Html()
-        strclean = normalizer.clean(HTML_IN)
+        strclean = normalizer.execute(HTML_IN)
         self.assertEqual(EXPECTED, strclean)
         self.assertEqual(NUMBER_OF_SPACES, normalizer.get_count())
         self.assertEqual(len(HTML_TAGS), normalizer.get_html_count())

@@ -47,6 +47,9 @@ class TestWordlist(unittest.TestCase):
         self.assertEqual(wordlist.get_path(),
                          self.path[:len(self.path) - 1])
 
+    def test_filename_fails(self):
+        with self.assertRaises(ValueError):
+             wordlist = Wordlist('')
 
 
 if __name__ == '__main__':

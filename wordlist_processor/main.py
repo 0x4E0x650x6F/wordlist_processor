@@ -29,6 +29,7 @@ class Wordlist(object):
             :type wordlist: String eg:
         """
         if wordlist:
+           self.wordlist = wordlist
            self.path = dirname(wordlist)
            self.filename = basename(wordlist)
            self.err_filename = ''.join([
@@ -54,6 +55,12 @@ class Wordlist(object):
     def get_path(self):
         return self.path
 
+    def process(self):
+        """
+            Implement Wordslist processing implementation
+            Clean, sort, remove duplicates.
+        """
+        pass
 
 
 if __name__ == "__main__":

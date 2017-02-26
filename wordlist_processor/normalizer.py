@@ -38,7 +38,7 @@ class Encoder(object):
     def get_unconverted_count(self):
         return self.unconverted_count
 
-    def convert(self, word):
+    def execute(self, word):
     
         """
             Convert a String from an encoding to another
@@ -73,7 +73,7 @@ class Sanitize(object):
     def get_count(self):
         return self.spaces_count
 
-    def clean(self, word):
+    def execute(self, word):
         """
             Removes the spaces tabs and updates the count
             @param String
@@ -111,7 +111,7 @@ class Html(Sanitize):
     def get_html_count(self):
         return self.html_count
     
-    def clean(self, word):
+    def execute(self, word):
         """
             Rremoves html tags from string and updates the count
             a this point html encoded chars are kept
@@ -125,4 +125,4 @@ class Html(Sanitize):
         """
         clean_word = ''.join(fromstring(word).itertext())
         self.html_count += self.calc_removed(word, clean_word)
-        return super(Html, self).clean(clean_word)
+        return super(Html, self).execute(clean_word)

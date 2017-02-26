@@ -31,7 +31,9 @@ class Wordlist(object):
         if wordlist:
            self.path = dirname(wordlist)
            self.filename = basename(wordlist)
-           self.err_filename = ''.join([self.ERROR_FILENAME_SUFIX, self.filename])
+           self.err_filename = ''.join([
+                                        self.ERROR_FILENAME_SUFIX,
+                                        self.filename])
         else:
             raise ValueError("Invalid wordlist")
 
@@ -51,6 +53,7 @@ class Wordlist(object):
 
     def get_path(self):
         return self.path
+
 
 
 if __name__ == "__main__":

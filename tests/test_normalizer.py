@@ -8,7 +8,6 @@
 #  Copyright © 2017 0x4E0x650x6F. All rights reserved.
 
 import unittest
-from wordlist_processor.normalizer import Html
 from wordlist_processor.normalizer import Sanitize
 from wordlist_processor.normalizer import Encoder
 
@@ -30,15 +29,19 @@ class TestEncoding(unittest.TestCase):
                         ]
     
     def test_convert_from_utf16_to_utf8(self):
+
         encoder = Encoder('utf_8_sig', 'utf8')
 
         for i in range(len(self.WORDS)):
-            self.assertEqual(encoder.execute(self.WORDS[i]), self.EXPECTED[i])
+            result = encoder.convert(self.WORDS[i])
+            self.assertEqual(result, self.EXPECTED[i])
     
     def test_convert_from_utf16_to_utf8_faild(self):
+        
         with self.assertRaises(UnicodeDecodeError):
             encoder = Encoder('utf_16', 'utf8')
-            self.assertEqual(encoder.execute(self.WORDS[0]),
+            result = encoder.convert(self.WORDS[0])
+            self.assertEqual(result,
                              self.EXPECTED[0])
 
 
@@ -50,7 +53,7 @@ class TestNormalizer(unittest.TestCase):
         NUMBER_OF_SPACES  = 3
         
         normalizer = Sanitize()
-        strclean = normalizer.execute(INPUT)
+        strclean = normalizer.trim(INPUT)
         
         self.assertEqual(NUMBER_OF_SPACES, normalizer.get_count())
         self.assertEqual(EXPECTED, strclean)
@@ -62,8 +65,8 @@ class TestNormalizer(unittest.TestCase):
         EXPECTED = "blah"
         NUMBER_OF_SPACES  = 1
         
-        normalizer = Html()
-        strclean = normalizer.execute(HTML_IN)
+        normalizer = Sanitize()
+        strclean = normalizer.clean(HTML_IN)
         self.assertEqual(EXPECTED, strclean)
         self.assertEqual(NUMBER_OF_SPACES, normalizer.get_count())
         self.assertEqual(len(HTML_TAGS), normalizer.get_html_count())

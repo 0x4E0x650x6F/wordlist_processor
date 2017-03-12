@@ -8,22 +8,12 @@
 #  Copyright © 2017 0x4E0x650x6F. All rights reserved.
 
 import unittest
+from os import remove
 from wordlist_processor.optimizer import Wordlist
+from wordlist_processor.optimizer import Sort
+from os.path import dirname
+from os.path import abspath
 
-"""
-def test_shellexc(self):
-        with open(
-            'm3g_thi_cth.lst',
-            'r') as wordlist:
-            
-            for word in wordlist:
-                try:
-                    print word.decode('utf_8_sig').encode('utf-8')
-                except Exception as e:
-                   print "faild"
-                    #print word
-                    #print word.decode('latin-1').encode('utf-8')
-"""
 
 class TestWordlist(unittest.TestCase):
 
@@ -56,13 +46,6 @@ class TestWordlist(unittest.TestCase):
                          self.flerr
                          )
 
-    def test_sorting_and_duplicate_remove(self):
-        infile = "/Users/0x4E0x650x6F/Downloads/word.lst"
-        outfile = "/Users/0x4E0x650x6F/Downloads/out_word.lst"
-        wordlist = Wordlist(infile, outfile, duplicates=True)
-        wordlist.process()
-        wordlist.print_stats()
-    
     def test_default_out_filename(self):
     
         wordlist = Wordlist(''.join([self.path, self.flin]))
@@ -81,7 +64,53 @@ class TestWordlist(unittest.TestCase):
                          wordlist.get_err_filename(),
                          self.flerr
                          )
+
+    def test_process(self):
+        EXPECTED_SANITIZE_COUNT = 15
+        EXPECTED_SANITIZE_HTML_COUNT = 0
+        
+        dir_name = dirname(abspath(__file__))
+        filename = '%s/%s' % (dir_name, '/data/sort_test_01.lst')
+        wordlist = Wordlist(filename, sort=True)
+        wordlist.process()
+        out_file = wordlist.get_out_filename()
+        out_fqdn = '%s/data/%s' % (dir_name, out_file)
+        
+        self.assertEqual(EXPECTED_SANITIZE_COUNT,
+                         wordlist.sanitize.get_count())
+        self.assertEqual(EXPECTED_SANITIZE_HTML_COUNT,
+                         wordlist.sanitize.get_html_count())
+        remove(out_fqdn)
     
     def test_empty_filenames_fails(self):
         with self.assertRaises(ValueError):
              wordlist = Wordlist('','')
+
+
+class TestSort(unittest.TestCase):
+
+    def setUp(self):
+        self.EXPECTED = [
+                         "1\n",
+                         "1111\n",
+                         "1234567\n",
+                         "123d\n",
+                         "1990\n",
+                         "54321\n",
+                         "7\n",
+                         "angelica\n",
+                         "mara\n",
+                         "markinho\n",
+                         "pepe\n",
+                        ]
+        self.dir_name = dirname(abspath(__file__))
+    
+    def test_sorting_and_duplicate_removal(self):
+        words = []
+        filename = '%s/%s' % (self.dir_name, '/data/sort_test_02.lst')
+        with open(filename) as input_file:
+            sort = Sort(duplicates=True) # enable dupl removal
+            for word in sort.sort(input_file):
+                words.append(word)
+
+            self.assertEqual(words, self.EXPECTED)

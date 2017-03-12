@@ -30,10 +30,11 @@ class Wordlist(object):
 
     ERROR_FILENAME_SUFIX = 'err_'
     OUT_FILENAME_SUFIX = 'out_'
+    CLEAN_FILENAME_SUFIX = 'clean_'
     
     def __init__(self,  flin, flout=None,
                  trim=True, html=False,
-                 sort=True, duplicates=False,
+                 sort=True, duplicates=True,
                  rencoding=False):
         """
             :param flin: path the filename
@@ -57,7 +58,8 @@ class Wordlist(object):
            self.flin = basename(flin)
            self.flerr = ''.join([
                                  self.ERROR_FILENAME_SUFIX,
-                                 self.flin])
+                                 self.flin
+                                ])
         else:
             raise ValueError("Invalid wordlist file or path")
 
@@ -80,6 +82,13 @@ class Wordlist(object):
                                       self.flout_path,
                                       self.flout
                                      ])
+        self.sort_filename = ''.join([
+                                 self.CLEAN_FILENAME_SUFIX,
+                                 self.flin
+                                 ])
+        self.clean_file_fqdn = path.join(
+                                    self.flin_path, '%s' % self.sort_filename
+                                    )
         self.trim = trim
         self.html = html
         self.sort = sort
@@ -126,18 +135,24 @@ class Wordlist(object):
         else:
            return self.sanitize.trim(word)
 
+    def __pre_prosess(self):
+        with open(self.flin_fqdn, 'r') as input_file, \
+                open(self.clean_file_fqdn, 'w') as out_file:
+            for line in input_file:
+                out_file.write(self.__clean(line))
+    
     def process(self):
         """
             Implement Wordslist processing implementation
             Clean, sort, remove duplicates.
         """
-        with open(self.flin_fqdn, 'rb', 64*1024) as input_file, \
-                open(self.flout_fqdn, 'wb', 64*1024) as out_file:
-             if self.sort:
-                for word in self.sorting.sort(input_file):
-                    out_file.write(self.__clean(word))
-             else:
-                out_file.write(self.__clean(word))
+        self.__pre_prosess()
+        if self.sort:
+            with open(self.clean_file_fqdn, 'rb', 64*1024) as input_file, \
+                    open(self.flout_fqdn, 'wb', 64*1024) as out_file:
+                    for word in self.sorting.sort(input_file):
+                        out_file.write(word)
+        remove(self.clean_file_fqdn)
 
 
 class Sort(object):
@@ -152,10 +167,15 @@ class Sort(object):
         self.duplicates = duplicates
         self.buffer_size = buffer_size
         self.duplicate_count = 0
+        self.sanitize = Sanitize()
 
     def __merge(self, *iterables):
         last = object()
         for element in heapq.merge(*iterables):
+            # make shore sorting doen't get screwd
+            # even if trim and html removal should
+            # happend before better save than sorry
+            # element = self.sanitize.trim(element)
             if self.duplicates == True:
                 if element != last:
                     last = element
@@ -171,27 +191,36 @@ class Sort(object):
     def sort(self, input_iterator):
         tempdirs = []
         chunks = []
-        tempdirs.append(gettempdir())
+        tempdir = gettempdir()
+
+        print "[*]\tUsing temporary directorys %s" % tempdir
+
+        tempdirs.append(tempdir)
         try:
             input_iterator = iter(input_iterator)
+            
             for tempdir in cycle(tempdirs):
                 islice_iter = islice(input_iterator, self.buffer_size)
                 current_chunk = list(islice_iter)
                 if not current_chunk:
                     break
                 current_chunk.sort()
-                temp_fqdn = path.join(tempdir,'%06i'%len(chunks))
-                output_chunk = open(temp_fqdn, 'w+b',64*1024)
+                temp_fqdn = path.join(tempdir, '%06i' % len(chunks))
+                output_chunk = open(temp_fqdn, 'w+b', 64*1024)
                 chunks.append(output_chunk)
                 output_chunk.writelines(current_chunk)
                 output_chunk.flush()
                 output_chunk.seek(0)
-            # yield after merge
+        
+            print "[*]\tFinished sorting chunks"
+            print "[*]\tMerging chunks"
+
             for word in self.__merge(*chunks):
                 yield word
         finally:
             for chunk in chunks:
                 try:
+                    print "[*]\tClosing temporary file %s" % chunk.name
                     chunk.close()
                     remove(chunk.name)
                 except Exception:

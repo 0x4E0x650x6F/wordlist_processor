@@ -147,7 +147,9 @@ class Wordlist(object):
         with open(self.flin_fqdn, 'r') as input_file, \
                 open(self.clean_file_fqdn, 'w') as out_file:
             for line in input_file:
-                out_file.write(self.__clean(line))
+                tmpline = self.__clean(line)
+                if tmpline:
+                    out_file.write(tmpline)
     
     def process(self):
         """

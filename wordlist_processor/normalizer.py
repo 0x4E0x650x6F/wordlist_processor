@@ -91,6 +91,8 @@ class Sanitize(object):
             .replace(self.SPACE_CHAR, "")
 
         self.spaces_count += self.__calc_removed(word, clean_word)
+        if (len(clean_word) - clean_word.count('\n')) == 0:
+            clean_word = None
         return clean_word
     
     def clean(self, word):

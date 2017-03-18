@@ -58,6 +58,16 @@ class TestNormalizer(unittest.TestCase):
         self.assertEqual(NUMBER_OF_SPACES, normalizer.get_count())
         self.assertEqual(EXPECTED, strclean)
     
+    def test_str_empty(self):
+        INPUT = "\n"
+        EXPECTED = None
+        NUMBER_OF_SPACES  = 0
+        
+        normalizer = Sanitize()
+        strclean = normalizer.trim(INPUT)
+        
+        self.assertEqual(EXPECTED, strclean)
+    
     def test_single_level_html(self):
         
         HTML_IN = "<html> blah</html>"

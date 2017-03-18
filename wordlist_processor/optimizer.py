@@ -8,31 +8,31 @@
 #  Created by 0x4E0x650x6F on 24/02/2017.
 #  Copyright © 2017 0x4E0x650x6F. All rights reserved.
 
+import heapq
 from os import remove
 from os import path
 from os.path import dirname
 from os.path import basename
 from tempfile import gettempdir
 from itertools import islice, cycle
-import heapq
+from normalizer import Sanitizer
 
-from normalizer import Sanitize
 
 class Wordlist(object):
 
     """
-        Base definition of a wordlist takes a 
+        Base definition of a wordlist takes a
         wordlist file as parameter extracts the
-        path and filename from wich a file for 
-        unhandled words from the wordlist is created 
+        path and filename from wich a file for
+        unhandled words from the wordlist is created
         aka error wordlist
     """
 
     ERROR_FILENAME_SUFIX = 'err_'
     OUT_FILENAME_SUFIX = 'out_'
     CLEAN_FILENAME_SUFIX = 'clean_'
-    
-    def __init__(self,  flin, flout=None,
+
+    def __init__(self, flin, flout=None,
                  trim=True, html=False,
                  sort=True, duplicates=True,
                  rencoding=False):
@@ -53,42 +53,42 @@ class Wordlist(object):
             :type rencoding: Boolean defaults to true
         """
         if flin:
-           self.flin_fqdn = flin
-           self.flin_path = dirname(flin)
-           self.flin = basename(flin)
-           self.flerr = ''.join([
-                                 self.ERROR_FILENAME_SUFIX,
-                                 self.flin
-                                ])
+            self.flin_fqdn = flin
+            self.flin_path = dirname(flin)
+            self.flin = basename(flin)
+            self.flerr = ''.join([
+                self.ERROR_FILENAME_SUFIX,
+                self.flin
+            ])
         else:
             raise ValueError("Invalid wordlist file or path")
 
         if flout:
-           self.flout_fqdn = flout
-           self.flout = basename(flout)
-           self.flout_path = dirname(flout)
+            self.flout_fqdn = flout
+            self.flout = basename(flout)
+            self.flout_path = dirname(flout)
         else:
-           self.flout = ''.join([
-                                 self.OUT_FILENAME_SUFIX,
-                                 self.flin
-                                ])
+            self.flout = ''.join([
+                self.OUT_FILENAME_SUFIX,
+                self.flin
+            ])
 
-           self.flout_path = ''.join([
-                                      './',
-                                    ])
+            self.flout_path = ''.join([
+                './',
+            ])
 
-           self.flout_fqdn = ''.join([
-                                      self.flout_path,
-                                      self.flout
-                                     ])
+            self.flout_fqdn = ''.join([
+                self.flout_path,
+                self.flout
+            ])
         self.sort_filename = ''.join([
-                                 self.CLEAN_FILENAME_SUFIX,
-                                 self.flin
-                                 ])
+            self.CLEAN_FILENAME_SUFIX,
+            self.flin
+        ])
         self.clean_file_fqdn = path.join(
-                                    self.flout_path,
-                                    self.sort_filename
-                                )
+            self.flout_path,
+            self.sort_filename
+        )
 
         self.trim = trim
         self.html = html
@@ -97,8 +97,8 @@ class Wordlist(object):
         self.rencoding = rencoding
         # After the paths been set its time to create
         # instanciate the operations
-        self.sanitize = Sanitize()
-        self.sorting = Sort(duplicates = self.duplicates)
+        self.sanitize = Sanitizer()
+        self.sorting = Sort(duplicates=self.duplicates)
 
     def get_filename(self):
         """
@@ -113,44 +113,44 @@ class Wordlist(object):
             :type: flerr: String
         """
         return self.flerr
-    
+
     def get_out_filename(self):
         """
             :return: flout: Return the wordlist filename
             :type: flout: String
         """
         return self.flout
-    
+
     def print_stats(self):
         print "[*]\tNumber of spaces removed %d" % \
             (self.sanitize.get_count())
         print "[*]\tNumber of html tags removed %d" % \
             (self.sanitize.get_html_count())
-        
+
         print "[*]\tNumber of duplicates removed %d" % \
             (self.sorting.get_count())
 
     def __clean(self, word):
         if self.html:
-           return self.sanitize.clean(word)
+            return self.sanitize.clean(word)
         else:
-           return self.sanitize.trim(word)
+            return self.sanitize.trim(word)
 
     def __pre_prosess(self):
         """
-            This cleans lines before any other work 
+            This cleans lines before any other work
             begins in orther to correctly handle
             sorting and duplicate removal
         """
         print "[*]\tClean Temp file  %s" \
-                    % self.clean_file_fqdn
+            % self.clean_file_fqdn
         with open(self.flin_fqdn, 'r') as input_file, \
                 open(self.clean_file_fqdn, 'w') as out_file:
             for line in input_file:
                 tmpline = self.__clean(line)
                 if tmpline:
                     out_file.write(tmpline)
-    
+
     def process(self):
         """
             Implement Wordslist processing implementation
@@ -160,8 +160,8 @@ class Wordlist(object):
             self.__pre_prosess()
             if self.sort:
                 with open(self.clean_file_fqdn,
-                          'rb', 64*1024) as input_file, \
-                    open(self.flout_fqdn, 'wb', 64*1024) as out_file:
+                          'rb', 64 * 1024) as input_file, \
+                        open(self.flout_fqdn, 'wb', 64 * 1024) as out_file:
                     for word in self.sorting.sort(input_file):
                         out_file.write(word)
         finally:
@@ -181,7 +181,7 @@ class Sort(object):
         self.duplicates = duplicates
         self.buffer_size = buffer_size
         self.duplicate_count = 0
-        self.sanitize = Sanitize()
+        self.sanitize = Sanitizer()
 
     def __merge(self, *iterables):
         last = object()
@@ -190,7 +190,7 @@ class Sort(object):
             # even if trim and html removal should
             # happend before better save than sorry
             # element = self.sanitize.trim(element)
-            if self.duplicates == True:
+            if self.duplicates:
                 if element != last:
                     last = element
                     yield element
@@ -212,7 +212,7 @@ class Sort(object):
         tempdirs.append(tempdir)
         try:
             input_iterator = iter(input_iterator)
-            
+
             for tempdir in cycle(tempdirs):
                 islice_iter = islice(input_iterator, self.buffer_size)
                 current_chunk = list(islice_iter)
@@ -220,12 +220,12 @@ class Sort(object):
                     break
                 current_chunk.sort()
                 temp_fqdn = path.join(tempdir, '%06i' % len(chunks))
-                output_chunk = open(temp_fqdn, 'w+b', 64*1024)
+                output_chunk = open(temp_fqdn, 'w+b', 64 * 1024)
                 chunks.append(output_chunk)
                 output_chunk.writelines(current_chunk)
                 output_chunk.flush()
                 output_chunk.seek(0)
-        
+
             print "[*]\tFinished sorting chunks"
             print "[*]\tMerging chunks"
 
@@ -238,5 +238,5 @@ class Sort(object):
                     chunk.close()
                     remove(chunk.name)
                 except Exception:
-                    print '''[*]\t An error ocurred while 
+                    print '''[*]\t An error ocurred while
                         closing the chunks'''

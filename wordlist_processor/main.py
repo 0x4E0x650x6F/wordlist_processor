@@ -32,7 +32,7 @@ def cmd_interface():
 
     args = parser.parse_args()
     try:
-        if path.isfile(args.input) == False:
+        if path.isfile(args.input) is False:
             raise ValueError("Invalid file name or Path")
     except ValueError as e:
         print "[*]\t %s" % (e)
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     args = cmd_interface()
     flin = args.input
     flout = args.output
-        
+
     sort = args.sort
     trim = args.clean
     html = args.tags

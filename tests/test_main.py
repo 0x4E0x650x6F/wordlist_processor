@@ -8,5 +8,3 @@
 #  Copyright © 2017 0x4E0x650x6F. All rights reserved.
 
 import unittest
-
-

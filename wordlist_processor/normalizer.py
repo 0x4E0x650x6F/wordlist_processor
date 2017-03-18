@@ -7,7 +7,7 @@
 #  Created by 0x4E0x650x6F on 25/02/2017.
 #  Copyright © 2017 0x4E0x650x6F. All rights reserved.
 
-from xml.etree.ElementTree import fromstring
+from HTMLParser import HTMLParser
 
 
 class Encoder(object):
@@ -16,15 +16,16 @@ class Encoder(object):
         Converts from one encoding to the other, and
         keeps count of the words converted successfully
         and unsuccessfuly.
-        
+
     """
+
     def __init__(self, src_encoding, dst_encoding='utf-8'):
         """
             :param src_encoding: Original encoding
-            :param dst_encoding: Destination encoding defaults to 
+            :param dst_encoding: Destination encoding defaults to
             utf8
-            :type src_encoding: String eg: utf-8 uft-16..
-            :type dst_encoding: String eg: utf-8 uft-16 defaults 
+            :type src_encoding: String eg: utf-8 uft-16.
+            :type dst_encoding: String eg: utf-8 uft-16 defaults
             utf8
         """
         self.src_encoding = src_encoding
@@ -39,7 +40,6 @@ class Encoder(object):
         return self.unconverted_count
 
     def convert(self, word):
-    
         """
             Convert a String from an encoding to another
             :param word: Word to be converted
@@ -56,17 +56,17 @@ class Encoder(object):
             raise e
 
 
-class Sanitize(object):
+class Sanitizer(object):
 
     """
-        Removes spaces or tabs, and html tags 
+        Removes spaces or tabs, and html tags
         them calculates number removed char's
         the counts are calculated speratly
     """
 
     TAB_CHAR = "\t"
     SPACE_CHAR = " "
-    
+
     def __init__(self):
         # tabs included
         self.spaces_count = 0
@@ -74,7 +74,7 @@ class Sanitize(object):
 
     def get_count(self):
         return self.spaces_count
-    
+
     def get_html_count(self):
         return self.html_count
 
@@ -94,24 +94,26 @@ class Sanitize(object):
         if (len(clean_word) - clean_word.count('\n')) == 0:
             clean_word = None
         return clean_word
-    
+
     def clean(self, word):
         """
             Rremoves html tags from string and updates the count
             a this point html encoded chars are kept
             :param word: word or line
             :type word: String
-            
+
             example:
             in: '<html>blah</html>' out 'blah'
             in: '<html><p>blah</p></html>' out 'blah'
             in: '<html><body><p>blah</p></body></html>' out 'blah'
             in: '<html><body><p>blah </p></body></html>' out 'blah'
             """
-        clean_word = ''.join(fromstring(word).itertext())
+        html_sanitize = HTMLSanitize()
+        html_sanitize.feed(word)
+        clean_word = html_sanitize.get_fed_data()
         self.html_count += self.__calc_removed(word, clean_word)
         return self.trim(clean_word)
-    
+
     def __calc_removed(self, dirty_str, clean_str):
         """
             The diference between the two strings used
@@ -125,4 +127,18 @@ class Sanitize(object):
         return len(dirty_str) - len(clean_str)
 
 
+class HTMLSanitize(HTMLParser):
+    """
+        remove tags  and partial tags etc.
+        Might be replaced in future!
+    """
 
+    def __init__(self):
+        self.reset()
+        self.fed = []
+
+    def handle_data(self, d):
+        self.fed.append(d)
+
+    def get_fed_data(self):
+        return ''.join(self.fed)

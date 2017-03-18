@@ -18,5 +18,8 @@ setup(
     author_email='tiago.alexand@gmail.com',
     url='www.tiagoalexandre.com',
     license=license,
+    install_requires=[
+        'bleach',
+    ],
     packages=find_packages(exclude=('tests'))
 )

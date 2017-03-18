@@ -54,7 +54,6 @@ class TestNormalizer(unittest.TestCase):
 
         normalizer = Sanitizer()
         strclean = normalizer.trim(INPUT)
-
         self.assertEqual(NUMBER_OF_SPACES, normalizer.get_count())
         self.assertEqual(EXPECTED, strclean)
 
@@ -95,6 +94,32 @@ class TestNormalizer(unittest.TestCase):
         self.assertEqual(len(HTML_TAGS), normalizer.get_html_count())
 
     def test_rand_invalid_html_tags(self):
+
+        HTML_IN = "ass<a> blah</>"
+        HTML_TAGS = "<a></>"
+        EXPECTED = "assblah"
+        NUMBER_OF_SPACES = 1
+
+        normalizer = Sanitizer()
+        strclean = normalizer.clean(HTML_IN)
+        self.assertEqual(EXPECTED, strclean)
+        self.assertEqual(NUMBER_OF_SPACES, normalizer.get_count())
+        self.assertEqual(len(HTML_TAGS), normalizer.get_html_count())
+
+    def test_rand_invalid_html_tags2(self):
+
+        HTML_IN = "ass<a> blah</a>"
+        HTML_TAGS = "<a></a>"
+        EXPECTED = "assblah"
+        NUMBER_OF_SPACES = 1
+
+        normalizer = Sanitizer()
+        strclean = normalizer.clean(HTML_IN)
+        self.assertEqual(EXPECTED, strclean)
+        self.assertEqual(NUMBER_OF_SPACES, normalizer.get_count())
+        self.assertEqual(len(HTML_TAGS), normalizer.get_html_count())
+
+    def test_rand_invalid_html_tags3(self):
 
         HTML_IN = "ass<a> blah</>"
         HTML_TAGS = "<a></>"

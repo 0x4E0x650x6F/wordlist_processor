@@ -6,8 +6,7 @@
 #
 #  Created by 0x4E0x650x6F on 25/02/2017.
 #  Copyright © 2017 0x4E0x650x6F. All rights reserved.
-
-from HTMLParser import HTMLParser
+from bleach import clean
 
 
 class Encoder(object):
@@ -108,9 +107,9 @@ class Sanitizer(object):
             in: '<html><body><p>blah</p></body></html>' out 'blah'
             in: '<html><body><p>blah </p></body></html>' out 'blah'
             """
-        html_sanitize = HTMLSanitize()
-        html_sanitize.feed(word)
-        clean_word = html_sanitize.get_fed_data()
+
+        clean_word = clean(word, tags=[],
+                           strip=True, strip_comments=True)
         self.html_count += self.__calc_removed(word, clean_word)
         return self.trim(clean_word)
 
@@ -125,20 +124,3 @@ class Sanitizer(object):
             :type clean_str: String
         """
         return len(dirty_str) - len(clean_str)
-
-
-class HTMLSanitize(HTMLParser):
-    """
-        remove tags  and partial tags etc.
-        Might be replaced in future!
-    """
-
-    def __init__(self):
-        self.reset()
-        self.fed = []
-
-    def handle_data(self, d):
-        self.fed.append(d)
-
-    def get_fed_data(self):
-        return ''.join(self.fed)

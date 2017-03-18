@@ -66,9 +66,8 @@ if __name__ == "__main__":
     print "\t[*]\tTrim tabs and spaces: %s" % trim
     print "\t[*]\tRemove Html Tags: %s" % html
     print "\t[*]\tSorts the wordlist: %s" % sort
-    print "[*]\tResults Status:\n"
     print "\t[*]\tRemove Duplicates: %s" % duplicates
-
+    print "[*]\tResults Status:\n"
     cont = raw_input("[-]\tDo you wish to Continue? [y/N]")
     if strtobool(cont):
         print "[*]\tThis might take a while"

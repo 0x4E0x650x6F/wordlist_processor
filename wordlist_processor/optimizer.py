@@ -16,7 +16,7 @@ from tempfile import gettempdir
 from itertools import islice, cycle
 import heapq
 
-from .normalizer import Sanitize
+from normalizer import Sanitize
 
 class Wordlist(object):
 
@@ -66,7 +66,7 @@ class Wordlist(object):
         if flout:
            self.flout_fqdn = flout
            self.flout = basename(flout)
-           self.flout_path = flout
+           self.flout_path = dirname(flout)
         else:
            self.flout = ''.join([
                                  self.OUT_FILENAME_SUFIX,
@@ -74,8 +74,7 @@ class Wordlist(object):
                                 ])
 
            self.flout_path = ''.join([
-                                      self.flin_path,
-                                      '/',
+                                      './',
                                     ])
 
            self.flout_fqdn = ''.join([
@@ -87,8 +86,10 @@ class Wordlist(object):
                                  self.flin
                                  ])
         self.clean_file_fqdn = path.join(
-                                    self.flin_path, '%s' % self.sort_filename
-                                    )
+                                    self.flout_path,
+                                    self.sort_filename
+                                )
+
         self.trim = trim
         self.html = html
         self.sort = sort
@@ -136,6 +137,13 @@ class Wordlist(object):
            return self.sanitize.trim(word)
 
     def __pre_prosess(self):
+        """
+            This cleans lines before any other work 
+            begins in orther to correctly handle
+            sorting and duplicate removal
+        """
+        print "[*]\tClean Temp file  %s" \
+                    % self.clean_file_fqdn
         with open(self.flin_fqdn, 'r') as input_file, \
                 open(self.clean_file_fqdn, 'w') as out_file:
             for line in input_file:
@@ -146,13 +154,17 @@ class Wordlist(object):
             Implement Wordslist processing implementation
             Clean, sort, remove duplicates.
         """
-        self.__pre_prosess()
-        if self.sort:
-            with open(self.clean_file_fqdn, 'rb', 64*1024) as input_file, \
+        try:
+            self.__pre_prosess()
+            if self.sort:
+                with open(self.clean_file_fqdn,
+                          'rb', 64*1024) as input_file, \
                     open(self.flout_fqdn, 'wb', 64*1024) as out_file:
                     for word in self.sorting.sort(input_file):
                         out_file.write(word)
-        remove(self.clean_file_fqdn)
+        finally:
+            print "[*]\tRemoving tmp file %s" % self.clean_file_fqdn
+            remove(self.clean_file_fqdn)
 
 
 class Sort(object):

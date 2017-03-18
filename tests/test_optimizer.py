@@ -71,11 +71,12 @@ class TestWordlist(unittest.TestCase):
         
         dir_name = dirname(abspath(__file__))
         filename = '%s/%s' % (dir_name, '/data/sort_test_01.lst')
-        wordlist = Wordlist(filename, sort=True)
+        out_filename = '%s/%s' % (dir_name, 'data/out_sort_test_01.lst')
+       
+        wordlist = Wordlist(filename, out_filename, sort=True)
         wordlist.process()
         out_file = wordlist.get_out_filename()
         out_fqdn = '%s/data/%s' % (dir_name, out_file)
-        
         self.assertEqual(EXPECTED_SANITIZE_COUNT,
                          wordlist.sanitize.get_count())
         self.assertEqual(EXPECTED_SANITIZE_HTML_COUNT,

@@ -21,5 +21,6 @@ setup(
     install_requires=[
         'bleach',
     ],
+    scripts=['bin/wlpc'],
     packages=find_packages(exclude=('tests'))
 )

@@ -1,4 +1,3 @@
 #!/bin/bash
 
-BINPATH=`dirname $0`
-python "$BINPATH/../wordlist_processor/main.py" $@
+python -m wordlist_processor.main $@

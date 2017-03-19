@@ -186,10 +186,6 @@ class Sort(object):
     def __merge(self, *iterables):
         last = object()
         for element in heapq.merge(*iterables):
-            # make shore sorting doen't get screwd
-            # even if trim and html removal should
-            # happend before better save than sorry
-            # element = self.sanitize.trim(element)
             if self.duplicates:
                 if element != last:
                     last = element

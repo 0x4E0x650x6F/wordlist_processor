@@ -9,164 +9,218 @@
 #  Copyright © 2017 0x4E0x650x6F. All rights reserved.
 
 import heapq
+import codecs
 from os import remove
+from os import close
 from os import path
+from abc import ABCMeta
+from abc import abstractmethod
 from os.path import dirname
 from os.path import basename
 from tempfile import gettempdir
 from itertools import islice, cycle
 from normalizer import Sanitizer
+from normalizer import Encoder
 
 
-class Wordlist(object):
+class AbstractWordlist:
+    __metaclass__ = ABCMeta
 
-    """
-        Base definition of a wordlist takes a
-        wordlist file as parameter extracts the
-        path and filename from wich a file for
-        unhandled words from the wordlist is created
-        aka error wordlist
-    """
+    ERROR_SFX = 'err_'
+    OUT_SFX = 'out_'
+    CLEAN_SFX = 'clean_'
 
-    ERROR_FILENAME_SUFIX = 'err_'
-    OUT_FILENAME_SUFIX = 'out_'
-    CLEAN_FILENAME_SUFIX = 'clean_'
-
-    def __init__(self, flin, flout=None,
-                 trim=True, html=False,
-                 sort=True, duplicates=True,
-                 rencoding=False):
+    def __init__(self, flin=None, flout=None):
         """
             :param flin: path the filename
             :type flin: String
             :param flout: path the filename
             :type flout: String
-            :param trim: path the filename
-            :type trim: Boolean defaults to true
-            :param html: path the filename
-            :type html: Boolean defaults to true
-            :param sort: path the filename
-            :type sort: Boolean defaults to true
-            :param duplicates: path the filename
-            :type duplicates: Boolean defaults to true
-            :param rencoding: path the filename
-            :type rencoding: Boolean defaults to true
         """
         if flin:
-            self.flin_fqdn = flin
+            self.flin = flin
             self.flin_path = dirname(flin)
-            self.flin = basename(flin)
-            self.flerr = ''.join([
-                self.ERROR_FILENAME_SUFIX,
-                self.flin
-            ])
+            self.flin_name = basename(flin)
         else:
             raise ValueError("Invalid wordlist file or path")
 
         if flout:
-            self.flout_fqdn = flout
-            self.flout = basename(flout)
-            self.flout_path = dirname(flout)
+            self.flout = flout
+            self.flout_name = basename(flout)
+            self.work_path = dirname(flout)
         else:
-            self.flout = ''.join([
-                self.OUT_FILENAME_SUFIX,
-                self.flin
-            ])
+            self.flout_name = self.__build_flname(self.OUT_SFX,
+                                                  self.flin_name)
+            self.work_path = './'
+            self.flout = self.__getpath(self.work_path,
+                                        self.flout_name, relative=True)
 
-            self.flout_path = ''.join([
-                './',
-            ])
+        # Temp filename used to store the words after clean
+        self.flclean_name = self.__build_flname(self.CLEAN_SFX,
+                                                self.flin_name)
+        self.flclean = self.__getpath(self.work_path,
+                                      self.flclean_name)
 
-            self.flout_fqdn = ''.join([
-                self.flout_path,
-                self.flout
-            ])
-        self.sort_filename = ''.join([
-            self.CLEAN_FILENAME_SUFIX,
-            self.flin
-        ])
-        self.clean_file_fqdn = path.join(
-            self.flout_path,
-            self.sort_filename
-        )
-
-        self.trim = trim
-        self.html = html
-        self.sort = sort
-        self.duplicates = duplicates
-        self.rencoding = rencoding
-        # After the paths been set its time to create
-        # instanciate the operations
+        # Error file name used to store words lead to error
+        self.flerr_name = self.__build_flname(self.ERROR_SFX,
+                                              self.flin_name)
+        self.flerr = self.__getpath(self.work_path,
+                                    self.flerr_name)
         self.sanitize = Sanitizer()
-        self.sorting = Sort(duplicates=self.duplicates)
+
+    def __build_flname(self, sufix, flname):
+        return ''.join([sufix, flname])
+
+    def __getpath(self, path, flname, relative=False):
+        if relative:
+            return ''.join(['./', flname])
+        else:
+            return ''.join([path, '/', flname])
 
     def get_filename(self):
         """
             :return: flin: Returns the Wordlist filename
             :type flin: String
         """
-        return self.flin
+        return self.flin_name
 
     def get_err_filename(self):
         """
             :return: flerr: Returns the Wordlist filename
             :type: flerr: String
         """
-        return self.flerr
+        return self.flerr_name
 
     def get_out_filename(self):
         """
-            :return: flout: Return the wordlist filename
-            :type: flout: String
+        :return: flout: Return the wordlist filename
+        :type: flout: String
         """
-        return self.flout
+        return self.flout_name
+
+    def clean(self, word):
+        if self.html:
+            return self.sanitize.clean(word)
+        else:
+            return self.sanitize.trim(word)
+
+    @abstractmethod
+    def print_stats(self):
+        pass
+
+    @abstractmethod
+    def pre_prosess(self):
+        pass
+
+    @abstractmethod
+    def process(self):
+        pass
+
+
+class BaseWordlist(AbstractWordlist):
+
+    def __init__(self, trim=True, html=False,
+                 sort=True, duplicates=True, **kwds):
+        """
+            Base definition of a wordlist takes a
+            wordlist file as parameter extracts the
+            path and filename from wich a file for
+            unhandled words from the wordlist is created
+            aka error wordlist
+        """
+        super(BaseWordlist, self).__init__(**kwds)
+        self.trim = trim
+        self.html = html
+        self.sort = sort
+        self.duplicates = duplicates
+        # After the paths been set its time to create
+        # instanciate the operations
+        self.sorting = Sort(duplicates=self.duplicates)
 
     def print_stats(self):
         print "[*]\tNumber of spaces removed %d" % \
             (self.sanitize.get_count())
         print "[*]\tNumber of html tags removed %d" % \
             (self.sanitize.get_html_count())
-
         print "[*]\tNumber of duplicates removed %d" % \
             (self.sorting.get_count())
 
-    def __clean(self, word):
-        if self.html:
-            return self.sanitize.clean(word)
-        else:
-            return self.sanitize.trim(word)
+    def pre_prosess(self):
+        print "[*]\tClean Temp file  %s" % self.flclean
 
-    def __pre_prosess(self):
-        """
-            This cleans lines before any other work
-            begins in orther to correctly handle
-            sorting and duplicate removal
-        """
-        print "[*]\tClean Temp file  %s" \
-            % self.clean_file_fqdn
-        with open(self.flin_fqdn, 'r') as input_file, \
-                open(self.clean_file_fqdn, 'w') as out_file:
-            for line in input_file:
-                tmpline = self.__clean(line)
+        flin_file = None
+        flclean_file = None
+        try:
+            flin_file = open(self.flin, 'r')
+            flclean_file = open(self.flclean, 'w')
+            for line in flin_file:
+                tmpline = self.clean(line)
                 if tmpline:
-                    out_file.write(tmpline)
+                    flclean_file.write(tmpline)
+        finally:
+            print "[*]\tRemoving tmp file %s" % self.flclean
+            if flin_file:
+                flin_file.close()
+            if flclean_file:
+                flclean_file.close()
 
     def process(self):
-        """
-            Implement Wordslist processing implementation
-            Clean, sort, remove duplicates.
-        """
+        input_file = None
+        out_file = None
         try:
-            self.__pre_prosess()
+            self.pre_prosess()
             if self.sort:
-                with open(self.clean_file_fqdn,
-                          'rb', 64 * 1024) as input_file, \
-                        open(self.flout_fqdn, 'wb', 64 * 1024) as out_file:
-                    for word in self.sorting.sort(input_file):
-                        out_file.write(word)
+                input_file = open(self.flclean, 'rb', 64 * 1024)
+                out_file = open(self.flout, 'wb', 64 * 1024)
+                for word in self.sorting.sort(input_file):
+                    out_file.write(word)
         finally:
-            print "[*]\tRemoving tmp file %s" % self.clean_file_fqdn
-            remove(self.clean_file_fqdn)
+            print "[*]\tRemoving tmp file %s" % self.flclean
+            if input_file:
+                input_file.close()
+            if out_file:
+                out_file.close()
+            remove(self.flclean)
+
+
+class WordlistEncoder(AbstractWordlist):
+
+    def __init__(self, src_encoding, dst_encoding='utf8', **kwds):
+        super(WordlistEncoder, self).__init__(**kwds)
+        self.encoder = Encoder(src_encoding, dst_encoding)
+
+    def print_stats(self):
+        print "[*]\tNº Chars Enconded %d" % \
+            (encoder.get_converted_count())
+        print "[*]\tNº Chars Not Encoded %s" % \
+            (encoder.get_unconverted_count())
+
+    def pre_prosess(self):
+        pass
+
+    def process(self):
+        input_file = None
+        out_file = None
+        try:
+            input_file = open(self.flin, 'r')
+            out_file = codecs.open(self.flout, 'w',  encoding='utf-8')
+            err_file = codecs.open(self.flerr, 'w',  encoding='utf-8')
+            for word in input_file:
+                try:
+                    rencode = self.encoder.convert(word)
+                    out_file.write(rencode)
+                except UnicodeDecodeError as e:
+                    print "error %s " % e
+                    err_file.write(word)
+
+        finally:
+            print "[*]\Closing tmp file %s" % self.flin
+            if input_file:
+                input_file.close()
+            if err_file:
+                err_file.close()
+            if out_file:
+                out_file.close()
 
 
 class Sort(object):

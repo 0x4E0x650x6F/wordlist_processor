@@ -20,19 +20,19 @@ def cmd_interface():
     clean = parser.add_argument_group('Clean operations',
                                       'Wordlist cleanup')
     encode = parser.add_argument_group('Rencode wordlist',
-                                      'Wordlist rencoding')
+                                       'Wordlist rencoding')
     parser.add_argument("input",
                         help="Path to the wordlist to clean")
     parser.add_argument("output",
                         help="Path to the cleaned wordlist")
     clean.add_argument("-c", "--clean", action="store_true",
-                        help="clean Tabs and spaces")
+                       help="clean Tabs and spaces")
     clean.add_argument("-t", "--tags", action="store_true",
-                        help="clean Tags xml and html")
+                       help="clean Tags xml and html")
     clean.add_argument("-d", "--duplicates", action="store_true",
-                        help="clean dulicates. Depends on sorting")
+                       help="clean dulicates. Depends on sorting")
     clean.add_argument("-s", "--sort", action="store_true",
-                        help="Sorts the wordlist")
+                       help="Sorts the wordlist")
     encode.add_argument("-e", "--encoding", type=str,
                         help="Change encoding")
 

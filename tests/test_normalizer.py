@@ -10,39 +10,18 @@
 import unittest
 from wordlist_processor.normalizer import Sanitizer
 from wordlist_processor.normalizer import Encoder
+import codecs
+from os.path import dirname
+from os.path import abspath
 
 
 class TestEncoding(unittest.TestCase):
-
-    def setUp(self):
-        self.WORDS = [
-            r"√º√§√∂12345",
-            r"∆*ÅôY'èQ∏~≤wk©á",
-            r"∆.VOòíO(gø$ÎÔs—´Eå¯QÜ",
-            r"∆.œg›≥nÁ∞∂;Î–=g©y"
-        ]
-        self.EXPECTED = [
-            r"√º√§√∂12345",
-            r"∆*ÅôY'èQ∏~≤wk©á",
-            r"∆.VOòíO(gø$ÎÔs—´Eå¯QÜ",
-            r"∆.œg›≥nÁ∞∂;Î–=g©y"
-        ]
-
-    def test_convert_from_utf16_to_utf8(self):
-
-        encoder = Encoder('utf_8_sig', 'utf8')
-
-        for i in range(len(self.WORDS)):
-            result = encoder.convert(self.WORDS[i])
-            self.assertEqual(result, self.EXPECTED[i])
 
     def test_convert_from_utf16_to_utf8_faild(self):
 
         with self.assertRaises(UnicodeDecodeError):
             encoder = Encoder('utf_16', 'utf8')
-            result = encoder.convert(self.WORDS[0])
-            self.assertEqual(result,
-                             self.EXPECTED[0])
+            result = encoder.convert("√º√§√∂12345")
 
 
 class TestNormalizer(unittest.TestCase):
@@ -131,3 +110,7 @@ class TestNormalizer(unittest.TestCase):
         self.assertEqual(EXPECTED, strclean)
         self.assertEqual(NUMBER_OF_SPACES, normalizer.get_count())
         self.assertEqual(len(HTML_TAGS), normalizer.get_html_count())
+
+
+if __name__ == '__main__':
+    unittest.main()

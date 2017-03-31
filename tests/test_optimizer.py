@@ -9,7 +9,9 @@
 
 import unittest
 from os import remove
-from wordlist_processor.optimizer import Wordlist
+from wordlist_processor.optimizer import AbstractWordlist
+from wordlist_processor.optimizer import BaseWordlist
+from wordlist_processor.optimizer import WordlistEncoder
 from wordlist_processor.optimizer import Sort
 from os.path import dirname
 from os.path import abspath
@@ -22,15 +24,15 @@ class TestWordlist(unittest.TestCase):
         self.flout = 'out_wordlist1.txt'
         self.path = '/some/path/'
         self.flerr = ''.join([
-            Wordlist.ERROR_FILENAME_SUFIX,
+            AbstractWordlist.ERROR_SFX,
             self.flin
         ])
 
     def test_filenames(self):
 
-        wordlist = Wordlist(
-            ''.join([self.path, self.flin]),
-            self.flout
+        wordlist = BaseWordlist(
+            flin=''.join([self.path, self.flin]),
+            flout=self.flout
         )
 
         self.assertEqual(
@@ -48,7 +50,7 @@ class TestWordlist(unittest.TestCase):
 
     def test_default_out_filename(self):
 
-        wordlist = Wordlist(''.join([self.path, self.flin]))
+        wordlist = BaseWordlist(flin=''.join([self.path, self.flin]))
 
         self.assertEqual(
             wordlist.get_filename(),
@@ -66,26 +68,55 @@ class TestWordlist(unittest.TestCase):
         )
 
     def test_process(self):
-        EXPECTED_SANITIZE_COUNT = 15
-        EXPECTED_SANITIZE_HTML_COUNT = 0
+        try:
+            EXPECTED_SANITIZE_COUNT = 15
+            EXPECTED_SANITIZE_HTML_COUNT = 0
 
-        dir_name = dirname(abspath(__file__))
-        filename = '%s/%s' % (dir_name, '/data/sort_test_01.lst')
-        out_filename = '%s/%s' % (dir_name, 'data/out_sort_test_01.lst')
+            dir_name = dirname(abspath(__file__))
 
-        wordlist = Wordlist(filename, out_filename, sort=True)
-        wordlist.process()
-        out_file = wordlist.get_out_filename()
-        out_fqdn = '%s/data/%s' % (dir_name, out_file)
-        self.assertEqual(EXPECTED_SANITIZE_COUNT,
-                         wordlist.sanitize.get_count())
-        self.assertEqual(EXPECTED_SANITIZE_HTML_COUNT,
-                         wordlist.sanitize.get_html_count())
-        remove(out_fqdn)
+            filename = '%s/data/%s' % (dir_name, 'sort_test_01.lst')
+            out_filename = '%s/data/%s' % (dir_name, 'out_sort_test_01.lst')
+
+            wordlist = BaseWordlist(
+                flin=filename, flout=out_filename, sort=True)
+            wordlist.process()
+
+            self.assertEqual(EXPECTED_SANITIZE_COUNT,
+                             wordlist.sanitize.get_count())
+            self.assertEqual(EXPECTED_SANITIZE_HTML_COUNT,
+                             wordlist.sanitize.get_html_count())
+        finally:
+            remove(out_filename)
 
     def test_empty_filenames_fails(self):
         with self.assertRaises(ValueError):
-            wordlist = Wordlist('', '')
+            wordlist = BaseWordlist(flin='', flout='')
+
+
+class TestWordlistEncoder(unittest.TestCase):
+
+    def test_process_encode(self):
+        try:
+            EXPECTED_ENCODE_COUNT = 3
+            EXPECTED_UNENCODE_COUNT = 36
+
+            dir_name = dirname(abspath(__file__))
+            filename = '%s/data/%s' % (dir_name, 'enc_test_01.lst')
+            out_filename = '%s/data/%s' % (dir_name,
+                                           'out_enc_test_01.lst')
+
+            wordlist = WordlistEncoder(flin=filename, flout=out_filename,
+                                       src_encoding='latin1',
+                                       dst_encoding='utf8')
+            wordlist.process()
+            wordlist.print_stats()
+            self.assertEqual(EXPECTED_ENCODE_COUNT,
+                             wordlist.encoder.get_converted_count())
+            self.assertEqual(EXPECTED_UNENCODE_COUNT,
+                             wordlist.encoder.get_unconverted_count())
+        finally:
+            remove(out_filename)
+            remove(wordlist.flerr)
 
 
 class TestSort(unittest.TestCase):

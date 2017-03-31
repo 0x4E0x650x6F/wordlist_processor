@@ -45,13 +45,17 @@ class Encoder(object):
             :type word: String eg:
         """
         try:
-            word = word.decode(self.src_encoding) \
-                       .encode(self.dst_encoding)
+            # recover the original encoding
+            # fix the string
+            sword = word.decode(self.src_encoding) \
+                .encode(self.src_encoding)
+            # convert the string to expected encoding
+            uword = sword.decode(self.dst_encoding)
             self.converted_count += 1
-            return word
-        except UnicodeDecodeError as e:
+            return uword
+        except UnicodeError as e:
             self.unconverted_count += 1
-            print "[*]\tFaild to convert\t%s" % word
+            print "[*]\tFaild to convert\t %s" % word
             raise e
 
 

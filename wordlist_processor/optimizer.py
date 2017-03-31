@@ -191,9 +191,9 @@ class WordlistEncoder(AbstractWordlist):
 
     def print_stats(self):
         print "[*]\tNº Chars Enconded %d" % \
-            (encoder.get_converted_count())
+            (self.encoder.get_converted_count())
         print "[*]\tNº Chars Not Encoded %s" % \
-            (encoder.get_unconverted_count())
+            (self.encoder.get_unconverted_count())
 
     def pre_prosess(self):
         pass
@@ -201,18 +201,23 @@ class WordlistEncoder(AbstractWordlist):
     def process(self):
         input_file = None
         out_file = None
+        err_file = None
         try:
-            input_file = open(self.flin, 'r')
-            out_file = codecs.open(self.flout, 'w',  encoding='utf-8')
-            err_file = codecs.open(self.flerr, 'w',  encoding='utf-8')
+            input_file = open(self.flin, 'rt')
+            out_file = codecs.open(self.flout, 'wt', encoding='utf-8')
+            err_file = codecs.open(self.flerr, 'wb')
             for word in input_file:
                 try:
                     rencode = self.encoder.convert(word)
                     out_file.write(rencode)
-                except UnicodeDecodeError as e:
+                except UnicodeError as e:
                     print "error %s " % e
                     err_file.write(word)
 
+        except UnicodeError as e:
+            print "[*]\tError Reading file with encoding %s" \
+                % self.file_encoding
+            raise e
         finally:
             print "[*]\Closing tmp file %s" % self.flin
             if input_file:

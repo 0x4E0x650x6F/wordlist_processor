@@ -211,7 +211,7 @@ class WordlistEncoder(AbstractWordlist):
                     rencode = self.encoder.convert(word)
                     out_file.write(rencode)
                 except UnicodeError as e:
-                    print "error %s " % e
+                    print "[*]\tError %s " % e
                     err_file.write(word)
 
         except UnicodeError as e:

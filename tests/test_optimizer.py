@@ -95,10 +95,33 @@ class TestWordlist(unittest.TestCase):
 
 class TestWordlistEncoder(unittest.TestCase):
 
-    def test_process_encode(self):
+    def test_process_encode_utf8(self):
         try:
-            EXPECTED_ENCODE_COUNT = 3
-            EXPECTED_UNENCODE_COUNT = 36
+            EXPECTED_ENCODE_COUNT = 5
+            EXPECTED_UNENCODE_COUNT = 34
+
+            dir_name = dirname(abspath(__file__))
+            filename = '%s/data/%s' % (dir_name, 'enc_test_02.lst')
+            out_filename = '%s/data/%s' % (dir_name,
+                                           'out_enc_test_02.lst')
+
+            wordlist = WordlistEncoder(flin=filename, flout=out_filename,
+                                       src_encoding='iso-8859-8',
+                                       dst_encoding='utf-8')
+            wordlist.process()
+            wordlist.print_stats()
+            self.assertEqual(EXPECTED_ENCODE_COUNT,
+                             wordlist.encoder.get_converted_count())
+            self.assertEqual(EXPECTED_UNENCODE_COUNT,
+                             wordlist.encoder.get_unconverted_count())
+        finally:
+            remove(out_filename)
+            remove(wordlist.flerr)
+
+    def test_process_encode_latin1(self):
+        try:
+            EXPECTED_ENCODE_COUNT = 39
+            EXPECTED_UNENCODE_COUNT = 0
 
             dir_name = dirname(abspath(__file__))
             filename = '%s/data/%s' % (dir_name, 'enc_test_01.lst')
@@ -106,8 +129,8 @@ class TestWordlistEncoder(unittest.TestCase):
                                            'out_enc_test_01.lst')
 
             wordlist = WordlistEncoder(flin=filename, flout=out_filename,
-                                       src_encoding='latin1',
-                                       dst_encoding='utf8')
+                                       src_encoding='latin_1',
+                                       dst_encoding='utf-8')
             wordlist.process()
             wordlist.print_stats()
             self.assertEqual(EXPECTED_ENCODE_COUNT,

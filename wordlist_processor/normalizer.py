@@ -47,15 +47,14 @@ class Encoder(object):
         try:
             # recover the original encoding
             # fix the string
-            sword = word.decode(self.src_encoding) \
-                .encode(self.src_encoding)
+            sword = word.decode(self.src_encoding).encode(self.dst_encoding)
             # convert the string to expected encoding
             uword = sword.decode(self.dst_encoding)
+
             self.converted_count += 1
             return uword
         except UnicodeError as e:
             self.unconverted_count += 1
-            print "[*]\tFaild to convert\t %s" % word
             raise e
 
 
